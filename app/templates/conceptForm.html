@@ -1,0 +1,66 @@
+{% extends './index.html' %}
+{% block content %}
+<br>
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create New Concept</title>
+</head>
+<body>
+    <main role="main" class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="content">
+                    <br><br>
+                    <form name = 'conceptForm' method = "POST">
+                        {% csrf_token %}
+                        <div class="row g-2">
+                            <div class="col-md"></div>
+                            <div class="col-md-5">
+                                <div class="form-floating">
+                                  <input type="text" class="form-control" id="conceptName" required='required' name = "conceptName">
+                                  <label for="conceptName">conceptName</label>
+                                </div>
+                            </div>
+                            <div class="col-md"></div>
+                        </div>
+                        <br>
+                        <div class="row g-2">
+                            <div class="col-md"></div>
+                            <div class="col-md-5">
+                                <div class="form-floating">
+                                  <input type="text" class="form-control" id="conceptDescription" name = "conceptDescription">
+                                  <label for="conceptDescription">Description</label>
+                                </div>
+                            </div>
+                            <div class="col-md"></div>
+                        </div>
+                        <br>
+                        <div class="row g-2">
+                            <div class="col-md"></div>
+                            <div class="col-md-5">
+                                <div class="form-check">
+                                  <input type="checkbox" class="form-check-input" id="conceptCheck" required='required' name = "conceptCheck">
+                                  <label class="form-check-label" for="conceptCheck">Confirm</label>
+                                </div>
+                            </div>
+                            <div class="col-md"></div>
+                        </div>
+
+                        <br>
+                        <div class = "form-group">
+                            <div class="d-grid mx-auto col-3">
+                                <button class = "btn btn-primary position-relative" type = "submit"> Build </button>
+                            </div>
+                        </div>
+                    </form>
+
+
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+{% endblock %}
+

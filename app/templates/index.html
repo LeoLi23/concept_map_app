@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jointjs/3.6.2/joint.css" />
+    </head>
+
+    <body>
+        <br>
+        <div>
+            <div class="row">
+                <div class="col-md-1"></div>
+                <div class="col">
+                    <button class="btn" style = "background-color: #e7e7e7; color: black; width: 200px" onclick="window.location.href='{% url 'app:index' %}'">Main Page</button>
+                </div>
+            </div>
+        </div>
+        <br>
+        <div class="d-grid gap-2 col-4 mx-auto">
+            <button class="btn btn-dark" type="button" value="newConcept" onclick="window.location.href='{% url 'app:createConcept' %}'">Create Concept</button>
+            <button class="btn btn-warning" type="button" value="newConnect">Connect</button>
+        </div>
+
+        <div class="container">
+            {% block content %}
+            {% endblock %}
+        </div>
+        <br>
+
+        <!-- content -->
+        <div id="myCanva"></div>
+
+        <!-- dependencies -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.4.1/backbone.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jointjs/3.6.5/joint.js"></script>
+
+        <!-- code -->
+        <script type="text/javascript">
+
+            var namespace = joint.shapes;
+
+            var graph = new joint.dia.Graph({}, { cellNamespace: namespace });
+
+            var paper = new joint.dia.Paper({
+                el: document.getElementById('myCanva'), // a html element into which the paper will be rendered
+                model: graph,
+                width: 4000,
+                height: 1000,
+                interactive: true,
+                gridSize: 10,
+                drawGrid: true,
+                background: {
+                    color: 'rgba(128,128,128,0.5)'
+                },
+                cellViewNamespace: namespace
+            });
+
+            // Create a custom element that extends the basic rectangle element
+            // create a custom node with a remove button
+            var CustomNode = joint.shapes.basic.Rect.extend({
+                interactive: true,
+                defaults: joint.util.deepSupplement({
+                type: 'CustomNode',
+                attrs: {
+                  rect:{
+                      fill:{
+                          type: 'linearGradient',
+                          stops:[
+                              {offset: "0%", color: "#8ecae6"},
+                              {offset: "0%", color: 'rgba(229,21,229,0.34)'}
+                          ],
+                          attrs: {
+                              x1: '0%',y1: '0%', x2: '0%', y2: '100%'
+                          }
+                      },
+                      stroke: '#555',
+                      strokewidth: 2,
+                      rx: 10, // Rounded corners
+                      ry: 10
+                  },
+                text: {
+                    fill: '#fff',
+                    fontSize: 14,
+                    fontWeight: 'bold',
+                    textWrap: {
+                      width: '100%',
+                      height: '100%',
+                      ellipsis: true
+                    },
+                    attrs: {
+                      textAnchor: 'middle',
+                      yAlignment: 'middle'
+                        }
+                    },
+                  //'text': { fill: 'black', 'font-size': 14, 'font-weight': 'bold', 'text-anchor': 'middle', 'ref-x': .5, 'ref-y': .5, ref: 'rect', 'y-alignment': 'middle', 'x-alignment': 'middle' },
+                '.delete': { ref: 'rect', 'ref-x': 1, 'ref-y': 0, transform: 'translate(-10, 10)', event: 'click:delete' }
+                }
+              }, joint.shapes.basic.Rect.prototype.defaults),
+
+              initialize: function() {
+                joint.shapes.basic.Rect.prototype.initialize.apply(this, arguments);
+                this.on('change:position', function() {
+                  // update position in database
+                  this.updatePosition();
+                }, this);
+              },
+
+              updatePosition: function() {
+                // update position in database
+                console.log('Updating position:', this.id, this.get('position'));
+              },
+
+              delete: function() {
+                // remove from paper and database
+                console.log('Deleting node:', this.id);
+                this.remove();
+              }
+            });
+
+
+            var customNode1 = new CustomNode({
+              id: 'customNode1',
+              position: { x: 500, y: 200 },
+              size: { width: 150, height: 75 },
+              attrs: {
+                text: { text: 'Custom Node 1' }
+              }
+            });
+
+            var customNode2 = new CustomNode({
+              id: 'customNode2',
+              position: { x: 600, y: 300 },
+              size: { width: 150, height: 75 },
+              attrs: {
+                text: { text: 'Custom Node 2' }
+              }
+            });
+            customNode1.addTo(graph)
+            customNode2.addTo(graph)
+            var link4 = new joint.shapes.standard.Link();
+            link4.source(customNode1);
+            link4.target(customNode2);
+            link4.addTo(graph);
+
+            // add event handlers for delete button
+            paper.on('element:pointerclick', function(elementView, evt) {
+                // listen for triple click
+                if (evt.detail === 3) {
+                    elementView.model.remove();
+                }
+            });
+            function openTextBox(evt, cellView,currPage) {
+                if (cellView instanceof joint.dia.ElementView){
+                    const bbox = cellView.getBBox();
+                    const x = bbox.x + bbox.width / 2;
+                    const y = bbox.y + bbox.height + 10;
+                    const $input = $('<input/>').css({
+                        position: 'absolute',
+                        left: x,
+                        top: y
+                    });
+
+                    // add the input box to the paper
+                    $('body').append($input);
+                    console.log(cellView.model.id)
+                    $input.val(cellView.model.attributes.attrs.text.text);
+                    $input.focus();
+
+                    // press enter
+                    $input.on('keydown',(e) => {
+                        if (e.keyCode === 13){
+                            let newText = $input.val()
+                            cellView.model.attributes.attrs.text.text = newText
+                            // send ajax request to save new data to db and reload the page
+                            $input.remove();
+                            // send the new text to the server
+                            $.ajax({
+                                url: 'updateConcept/',
+                                type: 'POST',
+                                beforeSend: function(xhr,settings){
+                                    xhr.setRequestHeader("X-CSRFToken","{{csrf_token}}");
+                                },
+                                data: {
+                                    'nodeId': cellView.model.id,
+                                    'nodeText': newText
+                                },
+                                success: function(data){
+                                    console.log('Node updated successfully');
+                                },
+                                error: function (xhr,status,error){
+                                    console.error('Error updating node: ' + error)
+                                }
+                            })
+                        }
+                        else{
+                            $input.remove()
+                        }
+                    });
+                }
+            }
+
+            // add event handlers for edit function
+            paper.on('cell:pointerdblclick', function(cellView,evt){
+                if (cellView.model.isElement()){
+                    openTextBox(evt,cellView,paper);
+                }
+            })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        </script>
+    </body>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js" integrity="sha384-mQ93GR66B00ZXjt0YO5KlohRA5SY2XofN4zfuZxLkoj1gXtW8ANNCe9d5Y3eG5eD" crossorigin="anonymous"></script>
+</html>
+
