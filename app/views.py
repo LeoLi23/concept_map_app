@@ -1,20 +1,15 @@
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseRedirect
-from django.db import connection
+from django.http import JsonResponse, HttpResponseRedirect
 from django.urls import reverse
+from .utils import *
 import datetime
 import random
 
 
 def index(request):
-    cursor = connection.cursor()
-    cursor.execute("select id,name,description,x_position,y_position from concept_node;")
-    concepts = cursor.fetchall()
-    cursor.close()
-    connection.close()
-    concepts = [list(concept) for concept in concepts]
     return render(request, './index.html', {
-        'nodes': concepts
+        'nodes': getAllNodes(),
+        'connections': getAllConnections()
     })
 
 
@@ -24,7 +19,7 @@ def createConcept(request):
         description = request.POST.get('conceptDescription')
         created_at = updated_at = datetime.datetime.now()
         # define range of x and y positions
-        x_range, y_range = (0, 4000), (0, 1000)
+        x_range, y_range = (0, 1800), (0, 1000)
         # random initial x and y positions
         x_position, y_position = random.randint(x_range[0], x_range[1]), random.randint(y_range[0], y_range[1])
         cursor = connection.cursor()
@@ -40,7 +35,6 @@ def createConcept(request):
 def updateConcept(request):
     if request.method == 'POST':
         idd = request.POST.get('nodeId')
-        print("idd is: ", idd)
         conceptName = request.POST.get('nodeText')
         updated_at = datetime.datetime.now()
         x_position = request.POST.get('new_x_position')
@@ -59,3 +53,38 @@ def updateConcept(request):
 
         cursor.execute("UPDATE concept_node SET name = %s,updated_at = %s,x_position = %s,y_position = %s \
                         WHERE id = %s;", (conceptName, updated_at, x_position, y_position, idd))
+        cursor.close()
+        connection.close()
+        return JsonResponse({'success': True})
+    else:
+        return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+
+def removeConcept(request):
+    if request.method == 'POST':
+        idd = request.POST.get('nodeId')
+        cursor = connection.cursor()
+        cursor.execute("DELETE FROM concept_node WHERE id = %s;", idd)
+        cursor.close()
+        connection.close()
+        return JsonResponse({'success': True})
+    else:
+        return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+
+def createConnection(request):
+    if request.method == 'GET':
+        return render(request, './connectionForm.html', {
+            'nodes': getAllNodes()
+        })
+    else:
+        source_id = request.POST.get('source_node')
+        target_id = request.POST.get('target_node')
+        print("source_id = {}, target_id = {}".format(source_id, target_id))
+        created_at = updated_at = datetime.datetime.now()
+        cursor = connection.cursor()
+        cursor.execute('INSERT INTO connection(source_node_id, target_node_id, created_at, updated_at) \
+                       VALUES(%s,%s,%s,%s);', (source_id, target_id, created_at, updated_at))
+        cursor.close()
+        connection.close()
+        return HttpResponseRedirect(reverse('app:index'))

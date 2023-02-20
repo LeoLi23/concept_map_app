@@ -1,0 +1,120 @@
+{% extends './index.html' %}
+{% block content %}
+<br>
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create New Concept</title>
+</head>
+<body>
+    <main role="main" class="container">
+        <script>
+            function changeTargetNodes(){
+                const sourceNode = document.getElementById('source_node').value;
+                const targetNodes = document.getElementById('target_node').options;
+                console.log(sourceNode);
+                console.log(targetNodes);
+
+                for (let i = 0; i < targetNodes.length; i++){
+                    if (targetNodes[i].value === sourceNode){
+                        targetNodes[i].disabled = true;
+                        targetNodes[i].selected = false;
+                    } else {
+                        targetNodes[i].disabled = false;
+                    }
+                }
+            }
+        </script>
+
+        <div class="d-flex gap-3 justify-content-center">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createConnectionModal">
+                Create Connection
+            </button>
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#removeConnectionModal">
+                Remove Connection
+            </button>
+        </div>
+
+        <div class="modal fade" id="createConnectionModal" tabindex="-1" aria-labelledby="createConnectionModal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createConnectionModalLabel">New Connection</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="modal-body">
+                          <div class="form-group">
+                            <label for="source_node">Source Node:</label>
+                            <select name="source_node" id="source_node" class="form-control" onchange="changeTargetNodes()">
+                                <option value="">--Select Source Node </option>
+                                {% for node in nodes %}
+                                    <option value="{{ node.0 }}">{{ node.1 }}</option>
+                                {% endfor %}
+                            </select>
+                          </div>
+                          <br>
+                          <div class="form-group">
+                            <label for="target_node">Target Node:</label>
+                            <select name="target_node" id="target_node" class="form-control">
+                                {% for node in nodes %}
+                                    <option value="{{ node.0 }}">{{ node.1 }}</option>
+                                {% endfor %}
+                            </select>
+                          </div>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="submit" class="btn btn-primary w-80 mb-2 btn-lg rounded-3">Create</button>
+                        </div>
+                      </form>
+
+                </div>
+            </div>
+        </div>
+        </div>
+
+        <div class="modal fade" id="removeConnectionModal" tabindex="-1" aria-labelledby="removeConnectionModal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="removeConnectionModalLabel">Remove Connection</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="modal-body">
+                          <div class="form-group">
+                            <label for="source_node_remove">Source Node:</label>
+                            <select name="source_node_remove" id="source_node_remove" class="form-control">
+                                <option value="">--Select Source Node </option>
+                                {% for node in nodes %}
+                                    <option value="{{ node.0 }}">{{ node.1 }}</option>
+                                {% endfor %}
+                            </select>
+                          </div>
+                          <br>
+                          <div class="form-group">
+                            <label for="target_node_remove">Target Node:</label>
+                            <select name="target_node_remove" id="target_node_remove" class="form-control">
+                                {% for node in nodes %}
+                                    <option value="{{ node.0 }}">{{ node.1 }}</option>
+                                {% endfor %}
+                            </select>
+                          </div>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="submit" class="btn btn-danger w-80 mb-2 btn-lg rounded-3">Remove</button>
+                        </div>
+                      </form>
+                </div>
+            </div>
+        </div>
+        </div>
+    </main>
+</body>
+{% endblock %}
+
