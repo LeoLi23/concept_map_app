@@ -11,5 +11,5 @@ urlpatterns = [
     path('removeConcept/', views.removeConcept, name='removeConcept'),
     # Connection
     path('createConnection/', views.createConnection, name='createConnection'),
-
+    path('removeConnection/', views.removeConnection, name='removeConnection'),
 ]

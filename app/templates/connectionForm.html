@@ -25,6 +25,31 @@
                     }
                 }
             }
+            // removeConnection
+            function showTargetNodes(){
+                const sourceNode = document.getElementById('source_node_remove').value;
+                const targetNodes = document.getElementById('target_node_remove').options;
+                const targets = {{relations}}[sourceNode];
+
+                for (let i = 0; i < targetNodes.length; i++){
+                    if (targetNodes[i].value === ""){
+                        continue
+                    }
+                    const currId = parseInt(targetNodes[i].value);
+                    if (isNaN(currId)){
+                        continue;
+                    }
+                    if (!targets.includes(currId)){
+                        targetNodes[i].disabled = true;
+                        targetNodes[i].selected = false;
+                        console.log("curr invalid target id: ",currId)
+                    } else {
+                        targetNodes[i].disabled = false;
+                        console.log("curr valid target id: ",currId)
+                    }
+                }
+            }
+
         </script>
 
         <div class="d-flex gap-3 justify-content-center">
@@ -44,7 +69,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form method="POST">
+                    <form method="POST" action="{% url 'app:createConnection' %}">
                         {% csrf_token %}
                         <div class="modal-body">
                           <div class="form-group">
@@ -84,15 +109,15 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form method="POST">
+                    <form method="POST" action="{% url 'app:removeConnection' %}">
                         {% csrf_token %}
                         <div class="modal-body">
                           <div class="form-group">
                             <label for="source_node_remove">Source Node:</label>
-                            <select name="source_node_remove" id="source_node_remove" class="form-control">
+                            <select name="source_node_remove" id="source_node_remove" class="form-control" onchange="showTargetNodes()">
                                 <option value="">--Select Source Node </option>
-                                {% for node in nodes %}
-                                    <option value="{{ node.0 }}">{{ node.1 }}</option>
+                                {% for source_id,source_name in source_node_data.items %}
+                                    <option value="{{source_id}}">{{ source_name }}</option>
                                 {% endfor %}
                             </select>
                           </div>
@@ -100,8 +125,9 @@
                           <div class="form-group">
                             <label for="target_node_remove">Target Node:</label>
                             <select name="target_node_remove" id="target_node_remove" class="form-control">
-                                {% for node in nodes %}
-                                    <option value="{{ node.0 }}">{{ node.1 }}</option>
+                                <option value="">--Select Target Node </option>
+                                {% for target_id,target_name in target_node_data.items %}
+                                    <option value="{{ target_id }}">{{ target_name }}</option>
                                 {% endfor %}
                             </select>
                           </div>

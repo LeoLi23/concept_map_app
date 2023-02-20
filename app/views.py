@@ -74,8 +74,36 @@ def removeConcept(request):
 
 def createConnection(request):
     if request.method == 'GET':
-        return render(request, './connectionForm.html', {
-            'nodes': getAllNodes()
+        cursor = connection.cursor()
+        cursor.execute("select source_node_id,cn.name as 'source_name' \
+                       from connection c join concept_node cn on c.source_node_id = cn.id;")
+        source_node_data = cursor.fetchall()
+        cursor.execute("select target_node_id,cn.name as 'target_name' \
+                        from connection c join concept_node cn on c.target_node_id = cn.id;")
+        target_node_data = cursor.fetchall()
+        cursor.execute("select source_node_id, target_node_id from connection;")
+        data = cursor.fetchall()
+        # represent connection as hashmaps
+        connections = {}  # {source1:[target1,target2,target3,...], source2:[]}
+        for source, target in data:
+            if source not in connections:
+                connections[source] = []
+            connections[source].append(target)
+        # process source_node
+        source_node_data = {source_id: sourceName for source_id, sourceName in source_node_data}
+        # process target_node
+        target_node_data = {target_id: targetName for target_id, targetName in target_node_data}
+        cursor.close()
+        connection.close()
+        print(source_node_data)
+        print(target_node_data)
+        print(connections)
+        return render(request, "./connectionForm.html", {
+            'nodes': getAllNodes(),
+            'source_node_data': source_node_data,
+            'target_node_data': target_node_data,
+            'connections': getAllConnections(),
+            'relations': connections  # {6:[7,8,9],4:[1,2]}
         })
     else:
         source_id = request.POST.get('source_node')
@@ -85,6 +113,18 @@ def createConnection(request):
         cursor = connection.cursor()
         cursor.execute('INSERT INTO connection(source_node_id, target_node_id, created_at, updated_at) \
                        VALUES(%s,%s,%s,%s);', (source_id, target_id, created_at, updated_at))
+        cursor.close()
+        connection.close()
+        return HttpResponseRedirect(reverse('app:index'))
+
+
+def removeConnection(request):
+    if request.method == 'POST':
+        source_node_remove = request.POST.get('source_node_remove')
+        target_node_remove = request.POST.get('target_node_remove')
+        cursor = connection.cursor()
+        cursor.execute("delete from connection where source_node_id = %s and target_node_id = %s;",
+                       (source_node_remove, target_node_remove))
         cursor.close()
         connection.close()
         return HttpResponseRedirect(reverse('app:index'))
