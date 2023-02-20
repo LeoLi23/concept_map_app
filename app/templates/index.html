@@ -31,7 +31,10 @@
         <br>
 
         <!-- content -->
-        <div id="myCanva"></div>
+        <div id="myCanva" style="border:2px solid #ccc;
+                                border-radius: 10px;
+                                margin-left: 50px;">
+        </div>
 
         <!-- dependencies -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.js"></script>
@@ -60,10 +63,29 @@
                 gridSize: 10,
                 drawGrid: true,
                 background: {
-                    color: 'rgba(128,128,128,0.5)'
+                    color: 'rgb(255,255,255)'
                 },
                 cellViewNamespace: namespace
             });
+
+            paper.on('cell:pointermove', function(cellView, evt, x, y) {
+                const bbox = cellView.getBBox();
+                const canvasWidth = paper.options.width;
+                const canvasHeight = paper.options.height;
+                if (bbox.x < 0) {
+                    cellView.model.set('position', { x: 0, y: bbox.y });
+                }
+                if (bbox.x + bbox.width > canvasWidth) {
+                    cellView.model.set('position', { x: canvasWidth - bbox.width, y: bbox.y });
+                }
+                if (bbox.y < 0) {
+                    cellView.model.set('position', { x: bbox.x, y: 0 });
+                }
+                if (bbox.y + bbox.height > canvasHeight) {
+                    cellView.model.set('position', { x: bbox.x, y: canvasHeight - bbox.height });
+                }
+            });
+
             // Create a custom element that extends the basic rectangle element
             // create a custom node with a remove button
             let CustomNode = joint.shapes.basic.Rect.extend({

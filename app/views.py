@@ -19,7 +19,7 @@ def createConcept(request):
         description = request.POST.get('conceptDescription')
         created_at = updated_at = datetime.datetime.now()
         # define range of x and y positions
-        x_range, y_range = (0, 1800), (0, 1000)
+        x_range, y_range = (50, 1800), (0, 1000)
         # random initial x and y positions
         x_position, y_position = random.randint(x_range[0], x_range[1]), random.randint(y_range[0], y_range[1])
         cursor = connection.cursor()
