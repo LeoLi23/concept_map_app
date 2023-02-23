@@ -9,9 +9,8 @@ import random
 def index(request):
     return render(request, './index.html', {
         'nodes': getAllNodes(),
-        'connections': getAllConnections()
+        'connections': getAllConnections(),
     })
-
 
 def createConcept(request):
     if request.method == 'POST':
@@ -128,3 +127,4 @@ def removeConnection(request):
         cursor.close()
         connection.close()
         return HttpResponseRedirect(reverse('app:index'))
+

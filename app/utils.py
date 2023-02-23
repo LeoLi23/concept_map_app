@@ -19,3 +19,4 @@ def getAllConnections():
     connection.close()
     connections = [list(c) for c in connections]
     return connections
+
