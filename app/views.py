@@ -1,9 +1,13 @@
 from django.shortcuts import render
-from django.http import JsonResponse, HttpResponseRedirect
+from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
 from django.urls import reverse
 from .utils import *
 import datetime
 import random
+import azure.cognitiveservices.speech as speechsdk
+import time
+
+speech_recognizer = None
 
 
 def index(request):
@@ -11,6 +15,7 @@ def index(request):
         'nodes': getAllNodes(),
         'connections': getAllConnections(),
     })
+
 
 def createConcept(request):
     if request.method == 'POST':
@@ -128,3 +133,77 @@ def removeConnection(request):
         connection.close()
         return HttpResponseRedirect(reverse('app:index'))
 
+
+def startRecording(request):
+    global speech_recognizer
+    if request.method == 'POST':
+        env_dict = parseConfig()
+        print(env_dict)
+        speech_config = speechsdk.SpeechConfig(subscription=env_dict['SPEECH_KEY'],
+                                               region=env_dict['SPEECH_REGION'])
+        speech_config.speech_recognition_language = "en-US"
+
+        audio_config = speechsdk.audio.AudioConfig(use_default_microphone=True)
+        speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
+
+        def speech_recognized(evt):
+            result = evt.result
+            if result.reason == speechsdk.ResultReason.RecognizedSpeech:
+                # last_recognized_time = datetime.datetime.now()
+                print("Recognized: {}".format(result.text))
+                keywords = extract_keywords(result.text)
+                print(keywords)
+                sql = "Insert into concept_node (name,description,created_at,updated_at,x_position,y_position) values \
+                    (%s, %s, %s, %s, %s, %s);"
+                x_range, y_range = (50, 1800), (0, 1000)
+                # random initial x and y positions
+                x_position, y_position = random.randint(x_range[0], x_range[1]), random.randint(y_range[0],
+                                                                                                y_range[1])
+                data = [(word,
+                         word,
+                         datetime.datetime.now(),
+                         datetime.datetime.now(),
+                         x_position,
+                         y_position
+                         ) for word in keywords]
+                # save to db
+                cursor = connection.cursor()
+                cursor.executemany(sql, data)
+                connection.commit()
+                cursor.close()
+                connection.close()
+                print("added to the database")
+            elif result.reason == speechsdk.ResultReason.NoMatch:
+                print("No speech could be recognized")
+            elif result.reason == speechsdk.ResultReason.Canceled:
+                print("Speech recognition canceled: {}".format(result.cancellation_details.reason))
+
+        speech_recognizer.recognized.connect(speech_recognized)
+        speech_recognizer.start_continuous_recognition()
+
+        # return a JSON response indicating that the recording has started
+        response = {
+            'message': 'Recording started'
+        }
+        return JsonResponse(response)
+    else:
+        return HttpResponse('Invalid request method')
+
+
+def stopRecording(request):
+    global speech_recognizer
+
+    if request.method == 'POST':
+        if speech_recognizer:
+            time.sleep(2)  # wait for 2 seconds
+            speech_recognizer.stop_continuous_recognition()
+            response = {
+                'message': 'Recording stopped'
+            }
+        else:
+            response = {
+                'message': 'No recording in progress'
+            }
+        return JsonResponse(response)
+    else:
+        return HttpResponse('Invalid request method')

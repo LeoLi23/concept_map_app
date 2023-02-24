@@ -1,2 +1,12 @@
+#microphone-button {
+    border: none;
+    background-color: transparent;
+    outline: none;
+}
+
+#microphone-button.recording {
+    background-color: red;
+    border-radius: 75%;
+}
 
 

@@ -12,4 +12,7 @@ urlpatterns = [
     # Connection
     path('createConnection/', views.createConnection, name='createConnection'),
     path('removeConnection/', views.removeConnection, name='removeConnection'),
+    # recording
+    path('startRecording/', views.startRecording, name='startRecording'),
+    path('stopRecording/', views.stopRecording, name='stopRecording'),
 ]

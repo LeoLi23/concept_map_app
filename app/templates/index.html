@@ -1,10 +1,11 @@
+{% load static %}
 <!doctype html>
 <html lang="en">
     <head>
         <!-- Required meta tags -->
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-
+        <link rel="stylesheet" type="text/css" href="{% static 'main.css' %}">
         <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jointjs/3.6.2/joint.css" />
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.js"></script>
@@ -23,8 +24,63 @@
                 <div class="col">
                     <button class="btn" style = "background-color: #e7e7e7; color: black; width: 200px" onclick="window.location.href='{% url 'app:index' %}'">Main Page</button>
                 </div>
-
+                <div class="col-md-2">
+                     <button id="microphone-button" type="button">
+                         <img src="{% static 'microphone.png' %}" alt="Microphone" style="height: 24px; width: 24px;">
+                     </button>
+                </div>
             </div>
+
+            <script>
+                var isRecording = false;
+
+                function toggleRecording(){
+                    isRecording = !isRecording;
+                    const microphoneButton = document.getElementById('microphone-button');
+                    if (isRecording){
+                        microphoneButton.classList.add('recording');
+                        $.ajax({
+                            url: 'startRecording/',
+                            type: 'POST',
+                            beforeSend: function(xhr,settings){
+                                xhr.setRequestHeader("X-CSRFToken","{{csrf_token}}");
+                            },
+                            data: {
+                                'action': 'start'
+                            },
+                            success: function(){
+                                console.log('start recording');
+                            },
+                            error: function (xhr,status,error){
+                                console.error('Error : ' + error);
+                            }
+                });
+                    } else {
+                        microphoneButton.classList.remove('recording');
+                        // stop recording
+                        $.ajax({
+                            url: 'stopRecording/',
+                            type: 'POST',
+                            beforeSend: function(xhr,settings){
+                                xhr.setRequestHeader("X-CSRFToken","{{csrf_token}}");
+                            },
+                            data: {
+                                'action': 'stop'
+                            },
+                            success: function(){
+                                console.log('stop recording');
+                            },
+                            error: function (xhr,status,error){
+                                console.error('Error : ' + error);
+                            }
+                });
+                    }
+                }
+
+                // add event listener to microphone button
+                const microphoneButton = document.getElementById('microphone-button');
+                microphoneButton.addEventListener('click', toggleRecording);
+            </script>
         </div>
 
         <br>
