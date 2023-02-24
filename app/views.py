@@ -6,6 +6,7 @@ import datetime
 import random
 import azure.cognitiveservices.speech as speechsdk
 import time
+from django.utils import timezone
 
 speech_recognizer = None
 
@@ -15,6 +16,17 @@ def index(request):
         'nodes': getAllNodes(),
         'connections': getAllConnections(),
     })
+
+
+def get_latest_nodes(request, latestCheckTime):
+    last_check_time = datetime.datetime.strptime(latestCheckTime, '%Y-%m-%dT%H:%M:%S.%fZ')
+    cursor = connection.cursor()
+    cursor.execute("select * from concept_node where created_at > %s;", last_check_time)
+    rows = cursor.fetchall()
+    if rows:
+        return JsonResponse({'newNodes': True})
+    else:
+        return JsonResponse({'newNodes': False})
 
 
 def createConcept(request):

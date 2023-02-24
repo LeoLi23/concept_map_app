@@ -15,4 +15,6 @@ urlpatterns = [
     # recording
     path('startRecording/', views.startRecording, name='startRecording'),
     path('stopRecording/', views.stopRecording, name='stopRecording'),
+    # Sync
+    path('get_latest_nodes/<str:latestCheckTime>/', views.get_latest_nodes, name='get_latest_nodes'),
 ]

@@ -77,6 +77,28 @@
                     }
                 }
 
+                function checkForNewNodes(lastCheckTime){
+                    $.ajax({
+                        url: `get_latest_nodes/${lastCheckTime}/`,
+                        data: {
+                            latestCheckTime: lastCheckTime
+                        },
+                        success: function(response){
+                            // update the page with new nodes
+                            if (response['newNodes']){
+                                location.reload();
+                            }
+                            // update the last check time
+                            lastCheckTime = new Date().toISOString();
+                        }
+                    })
+                }
+                // check for new nodes every 10 seconds
+                const lastCheckTime = new Date().toISOString();
+                setInterval(function(){
+                    checkForNewNodes(lastCheckTime);
+                }, 10000);
+
                 // add event listener to microphone button
                 const microphoneButton = document.getElementById('microphone-button');
                 microphoneButton.addEventListener('click', toggleRecording);
